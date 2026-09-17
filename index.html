@@ -837,6 +837,7 @@
             ? savedViewMode
             : "list";
         let installPrompt = null;
+        let autoScrolledTimetableTarget = null;
 
         document.addEventListener("click", (event) => {
           if (event.target.closest(".timetable-event.is-expanded")) return;
@@ -899,6 +900,7 @@
         });
         timetableViewButton.addEventListener("click", () => {
           viewMode = "timetable";
+          autoScrolledTimetableTarget = null;
           localStorage.setItem("class-schedule-view", viewMode);
           render();
         });
@@ -1107,6 +1109,7 @@
                 "timetable-event" +
                 (isLive ? " is-live" : "") +
                 (isNext ? " is-next" : "");
+              event.dataset.eventId = String(e.id);
               event.setAttribute("aria-label", `${e.code}: ${e.name}`);
               event.style.setProperty("--accent", `var(--c-${e.cls})`);
               event.style.top = `${((e.start - RANGE_START) / 30) * 54 + 4}px`;
@@ -1167,6 +1170,25 @@
               column.appendChild(now);
             }
           });
+
+          const currentEvent = panel.querySelector(".timetable-event.is-live");
+          const currentMarker = panel.querySelector(".timetable-now");
+          const target = currentEvent || currentMarker;
+          const targetKey = currentEvent
+            ? `event-${currentEvent.dataset.eventId}`
+            : currentMarker
+              ? "current-time"
+              : null;
+          if (target && targetKey !== autoScrolledTimetableTarget) {
+            autoScrolledTimetableTarget = targetKey;
+            requestAnimationFrame(() => {
+              target.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+                inline: "center",
+              });
+            });
+          }
         }
 
         function nowDivider(mins) {
