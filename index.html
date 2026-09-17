@@ -213,6 +213,10 @@
         color: var(--accent);
         font-weight: 600;
       }
+      .subject-section {
+        color: var(--ink-soft);
+        font-weight: 400;
+      }
       .hero-name {
         font-size: 18px;
         font-weight: 600;
@@ -684,6 +688,11 @@
         width: 7px;
         height: 7px;
       }
+      .legend-item .section {
+        color: var(--ink-faint);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+      }
 
       footer.hint {
         margin-top: 18px;
@@ -765,18 +774,36 @@
     <script>
       (function () {
         const SUBJECTS = {
-          ITD112: { name: "Data Visualization Techniques", cls: "itd112" },
+          ITD112: {
+            name: "Data Visualization Techniques",
+            cls: "itd112",
+            sec: "BC25-4D",
+          },
           ITE104: {
             name: "Social, Legal & Professional Issues in Computing",
             cls: "ite104",
+            sec: "E25-4",
           },
-          ITD111: { name: "Business Intelligence", cls: "itd111" },
+          ITD111: {
+            name: "Business Intelligence",
+            cls: "itd111",
+            sec: "FG25-4D",
+          },
           ENT101: {
             name: "Startup Essentials: Innovation-driven Entrepreneurship",
             cls: "ent101",
+            sec: "K25-4",
           },
-          ITE183: { name: "Web Systems and Technologies", cls: "ite183" },
-          ITE105: { name: "Information Assurance and Security", cls: "ite105" },
+          ITE183: {
+            name: "Web Systems and Technologies",
+            cls: "ite183",
+            sec: "LM25-4",
+          },
+          ITE105: {
+            name: "Information Assurance and Security",
+            cls: "ite105",
+            sec: "O25-4",
+          },
         };
 
         const DAYS = [
@@ -910,7 +937,7 @@
         Object.entries(SUBJECTS).forEach(([code, s]) => {
           const item = document.createElement("div");
           item.className = "legend-item";
-          item.innerHTML = `<span class="dot" style="background:var(--c-${s.cls})"></span>${code} · ${s.name}`;
+          item.innerHTML = `<span class="dot" style="background:var(--c-${s.cls})"></span>${code} <span class="section">${s.sec}</span> · ${s.name}`;
           legend.appendChild(item);
         });
 
@@ -964,7 +991,7 @@
               ),
             );
             nowBody.innerHTML = `
-        <div class="hero-code">${current.code}</div>
+        <div class="hero-code">${current.code} <span class="subject-section">${current.sec}</span></div>
         <div class="hero-name">${current.name}</div>
         <div class="hero-detail">${current.room} · ${fmtClock(current.start)}–${fmtClock(current.end)}</div>
         <div class="hero-count">Ends in ${fmtDuration(remaining)}</div>
@@ -989,7 +1016,7 @@
             else if (!nextWraps) when = `${dayLabel} · ${fmtClock(next.start)}`;
             else when = `${dayLabel} (next week) · ${fmtClock(next.start)}`;
             nextBody.innerHTML = `
-        <div class="hero-code">${next.code}</div>
+        <div class="hero-code">${next.code} <span class="subject-section">${next.sec}</span></div>
         <div class="hero-name">${next.name}</div>
         <div class="hero-detail">${next.room} · ${fmtClock(next.start)}–${fmtClock(next.end)}</div>
         <div class="hero-count">${when}</div>`;
@@ -1053,7 +1080,7 @@
             row.innerHTML = `
         <div class="row-time"><span class="from">${fmtClock(e.start)}</span><br>${fmtClock(e.end)}</div>
         <div class="row-main">
-          <div class="row-top"><span class="dot"></span><span class="row-code">${e.code}</span>${badge}</div>
+          <div class="row-top"><span class="dot"></span><span class="row-code">${e.code} <span class="subject-section">${e.sec}</span></span>${badge}</div>
           <div class="row-name">${e.name}</div>
           <div class="row-room">${e.room}</div>
           ${bar}
@@ -1114,7 +1141,7 @@
               event.style.setProperty("--accent", `var(--c-${e.cls})`);
               event.style.top = `${((e.start - RANGE_START) / 30) * 54 + 4}px`;
               event.style.height = `${((e.end - e.start) / 30) * 54 - 7}px`;
-              event.innerHTML = `<span class="code">${e.code}</span><span class="name">${e.name}</span><span class="detail">${e.room}</span><span class="detail">${fmtClock(e.start)}–${fmtClock(e.end)}</span>`;
+              event.innerHTML = `<span class="code">${e.code} <span class="subject-section">${e.sec}</span></span><span class="name">${e.name}</span><span class="detail">${e.room}</span><span class="detail">${fmtClock(e.start)}–${fmtClock(e.end)}</span>`;
               column.appendChild(event);
 
               const setupExpansion = () => {
