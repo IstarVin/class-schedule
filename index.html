@@ -582,6 +582,23 @@
         border-radius: 4px;
         background: color-mix(in srgb, var(--accent) 16%, var(--board-row));
         color: var(--ink);
+        cursor: pointer;
+        transition:
+          height 160ms ease,
+          box-shadow 160ms ease,
+          background-color 160ms ease;
+      }
+      .timetable-event:hover,
+      .timetable-event:focus-visible {
+        background: color-mix(in srgb, var(--accent) 24%, var(--board-row));
+        outline: none;
+      }
+      .timetable-event.is-expanded {
+        z-index: 4;
+        height: auto !important;
+        min-height: 101px;
+        overflow: visible;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
       }
       .timetable-event.is-live {
         background: var(--live-bg);
@@ -605,6 +622,7 @@
         font-size: 12px;
         font-weight: 600;
         line-height: 1.2;
+        overflow-wrap: anywhere;
       }
       .timetable-event .detail {
         display: block;
@@ -613,7 +631,8 @@
         font:
           10px "IBM Plex Mono",
           monospace;
-        white-space: nowrap;
+        white-space: normal;
+        overflow-wrap: anywhere;
       }
       .timetable-empty {
         position: absolute;
@@ -814,6 +833,7 @@
         }
 
         let selectedDay = null;
+        let expandedTimetableEventId = null;
         const savedViewMode = localStorage.getItem("class-schedule-view");
         let viewMode =
           savedViewMode === "timetable" || savedViewMode === "list"
@@ -1079,10 +1099,42 @@
                 "timetable-event" +
                 (isLive ? " is-live" : "") +
                 (isNext ? " is-next" : "");
+              if (expandedTimetableEventId === e.id) {
+                event.classList.add("is-expanded");
+              }
+              event.tabIndex = 0;
+              event.setAttribute("role", "button");
+              event.setAttribute("aria-label", `${e.code}: ${e.name}`);
+              event.setAttribute(
+                "aria-expanded",
+                String(expandedTimetableEventId === e.id),
+              );
               event.style.setProperty("--accent", `var(--c-${e.cls})`);
               event.style.top = `${((e.start - RANGE_START) / 30) * 54 + 4}px`;
               event.style.height = `${((e.end - e.start) / 30) * 54 - 7}px`;
-              event.innerHTML = `<span class="code">${e.code}</span><span class="name">${e.name}</span><span class="detail">${e.room} · ${fmtClock(e.start)}–${fmtClock(e.end)}</span>`;
+              event.innerHTML = `<span class="code">${e.code}</span><span class="name">${e.name}</span><span class="detail">${e.room}</span><span class="detail">${fmtClock(e.start)}–${fmtClock(e.end)}</span>`;
+              const toggleExpanded = () => {
+                const isExpanded = event.classList.toggle("is-expanded");
+                expandedTimetableEventId = isExpanded ? e.id : null;
+                event.setAttribute("aria-expanded", String(isExpanded));
+                if (isExpanded) {
+                  column
+                    .querySelectorAll(".timetable-event.is-expanded")
+                    .forEach((other) => {
+                      if (other !== event) {
+                        other.classList.remove("is-expanded");
+                        other.setAttribute("aria-expanded", "false");
+                      }
+                    });
+                }
+              };
+              event.addEventListener("click", toggleExpanded);
+              event.addEventListener("keydown", (eventKey) => {
+                if (eventKey.key === "Enter" || eventKey.key === " ") {
+                  eventKey.preventDefault();
+                  toggleExpanded();
+                }
+              });
               column.appendChild(event);
             });
             if (
