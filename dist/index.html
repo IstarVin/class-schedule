@@ -1429,7 +1429,16 @@
         }
 
         render();
-        setInterval(render, 15000);
+        function scheduleMinuteUpdates() {
+          const now = new Date();
+          const delay = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+          setTimeout(() => {
+            render();
+            setInterval(render, 60000);
+          }, delay);
+        }
+
+        scheduleMinuteUpdates();
 
         if ("serviceWorker" in navigator) {
           window.addEventListener("load", async () => {
