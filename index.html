@@ -363,6 +363,12 @@
         background: var(--next-bg);
         border-left-color: var(--next);
       }
+      .row.is-subject-highlighted {
+        z-index: 1;
+        box-shadow:
+          inset 0 0 0 2px var(--accent),
+          0 4px 14px rgba(0, 0, 0, 0.18);
+      }
 
       .row-time {
         flex: 0 0 78px;
@@ -611,6 +617,13 @@
       .timetable-event.is-next {
         --accent: var(--next) !important;
       }
+      .timetable-event.is-subject-highlighted {
+        z-index: 3;
+        background: color-mix(in srgb, var(--accent) 34%, var(--board-row));
+        box-shadow:
+          0 0 0 2px var(--accent),
+          0 6px 16px rgba(0, 0, 0, 0.24);
+      }
       .timetable-event .code {
         color: var(--accent);
         font:
@@ -683,6 +696,20 @@
         gap: 7px;
         font-size: 12px;
         color: var(--ink-soft);
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 4px 5px;
+        margin: -4px -5px;
+        transition:
+          color 160ms ease,
+          background-color 160ms ease;
+      }
+      .legend-item:hover,
+      .legend-item:focus-visible,
+      .legend-item.is-selected {
+        color: var(--ink);
+        background: color-mix(in srgb, var(--accent) 14%, transparent);
+        outline: none;
       }
       .legend-item .dot {
         width: 7px;
@@ -865,8 +892,88 @@
             : "list";
         let installPrompt = null;
         let autoScrolledTimetableTarget = null;
+        let lockedSubjectCode = null;
+        let hoveredSubjectCode = null;
+        let subjectNavigationCode = null;
+
+        function highlightedSubjectCode() {
+          return lockedSubjectCode || hoveredSubjectCode;
+        }
+
+        function applySubjectHighlight() {
+          const code = highlightedSubjectCode();
+          document
+            .querySelectorAll(".row, .timetable-event")
+            .forEach((item) => {
+              item.classList.toggle(
+                "is-subject-highlighted",
+                Boolean(code && item.dataset.subjectCode === code),
+              );
+            });
+          document.querySelectorAll(".legend-item").forEach((item) => {
+            item.classList.toggle(
+              "is-selected",
+              Boolean(code && item.dataset.subjectCode === code),
+            );
+            item.setAttribute(
+              "aria-pressed",
+              String(item.dataset.subjectCode === lockedSubjectCode),
+            );
+          });
+        }
+
+        function navigateToSubject(code) {
+          subjectNavigationCode = code;
+          if (viewMode === "list") {
+            const currentDayHasSubject = DATA.some(
+              (e) => e.day === selectedDay && e.code === code,
+            );
+            if (!currentDayHasSubject) {
+              selectedDay =
+                DATA.find((e) => e.code === code)?.day ?? selectedDay;
+            }
+          }
+          render();
+        }
+
+        function scrollToSubjectInList() {
+          if (!subjectNavigationCode) return false;
+          const target = [...document.querySelectorAll(".row")].find(
+            (row) => row.dataset.subjectCode === subjectNavigationCode,
+          );
+          if (!target) return false;
+          subjectNavigationCode = null;
+          requestAnimationFrame(() => {
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+          return true;
+        }
+
+        function scrollToSubjectInTimetable() {
+          if (!subjectNavigationCode) return false;
+          const target = [
+            ...document.querySelectorAll(".timetable-event"),
+          ].find(
+            (event) => event.dataset.subjectCode === subjectNavigationCode,
+          );
+          if (!target) return false;
+          subjectNavigationCode = null;
+          requestAnimationFrame(() => {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "center",
+            });
+          });
+          return true;
+        }
 
         document.addEventListener("click", (event) => {
+          if (!event.target.closest(".legend-item")) {
+            lockedSubjectCode = null;
+            hoveredSubjectCode = null;
+            applySubjectHighlight();
+          }
           if (event.target.closest(".timetable-event.is-expanded")) return;
           const expandedEvent = document.querySelector(
             ".timetable-event.is-expanded",
@@ -923,12 +1030,14 @@
         listViewButton.addEventListener("click", () => {
           viewMode = "list";
           localStorage.setItem("class-schedule-view", viewMode);
+          subjectNavigationCode = highlightedSubjectCode();
           render();
         });
         timetableViewButton.addEventListener("click", () => {
           viewMode = "timetable";
           autoScrolledTimetableTarget = null;
           localStorage.setItem("class-schedule-view", viewMode);
+          subjectNavigationCode = highlightedSubjectCode();
           render();
         });
 
@@ -937,7 +1046,36 @@
         Object.entries(SUBJECTS).forEach(([code, s]) => {
           const item = document.createElement("div");
           item.className = "legend-item";
+          item.dataset.subjectCode = code;
+          item.style.setProperty("--accent", `var(--c-${s.cls})`);
+          item.tabIndex = 0;
+          item.setAttribute("role", "button");
+          item.setAttribute("aria-pressed", "false");
           item.innerHTML = `<span class="dot" style="background:var(--c-${s.cls})"></span>${code} <span class="section">${s.sec}</span> · ${s.name}`;
+          item.addEventListener("mouseenter", () => {
+            if (!lockedSubjectCode) {
+              hoveredSubjectCode = code;
+              applySubjectHighlight();
+            }
+          });
+          item.addEventListener("mouseleave", () => {
+            if (!lockedSubjectCode) {
+              hoveredSubjectCode = null;
+              applySubjectHighlight();
+            }
+          });
+          item.addEventListener("click", () => {
+            lockedSubjectCode = lockedSubjectCode === code ? null : code;
+            hoveredSubjectCode = null;
+            applySubjectHighlight();
+            if (lockedSubjectCode) navigateToSubject(code);
+          });
+          item.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              item.click();
+            }
+          });
           legend.appendChild(item);
         });
 
@@ -1062,6 +1200,7 @@
             const row = document.createElement("div");
             row.className =
               "row" + (isLive ? " is-live" : "") + (isNext ? " is-next" : "");
+            row.dataset.subjectCode = e.code;
             row.style.setProperty("--accent", `var(--c-${e.cls})`);
             let badge = "";
             if (isLive) badge = `<span class="badge live">LIVE</span>`;
@@ -1086,6 +1225,7 @@
           ${bar}
         </div>`;
             panel.appendChild(row);
+            applySubjectHighlight();
           });
 
           if (
@@ -1096,6 +1236,7 @@
           ) {
             panel.appendChild(nowDivider(status.mins));
           }
+          scrollToSubjectInList();
         }
 
         function renderTimetable(status) {
@@ -1136,6 +1277,7 @@
                 "timetable-event" +
                 (isLive ? " is-live" : "") +
                 (isNext ? " is-next" : "");
+              event.dataset.subjectCode = e.code;
               event.dataset.eventId = String(e.id);
               event.setAttribute("aria-label", `${e.code}: ${e.name}`);
               event.style.setProperty("--accent", `var(--c-${e.cls})`);
@@ -1143,6 +1285,7 @@
               event.style.height = `${((e.end - e.start) / 30) * 54 - 7}px`;
               event.innerHTML = `<span class="code">${e.code} <span class="subject-section">${e.sec}</span></span><span class="name">${e.name}</span><span class="detail">${e.room}</span><span class="detail">${fmtClock(e.start)}–${fmtClock(e.end)}</span>`;
               column.appendChild(event);
+              applySubjectHighlight();
 
               const setupExpansion = () => {
                 if (event.scrollHeight <= event.clientHeight) {
@@ -1197,6 +1340,8 @@
               column.appendChild(now);
             }
           });
+
+          if (scrollToSubjectInTimetable()) return;
 
           const currentEvent = panel.querySelector(".timetable-event.is-live");
           const currentMarker = panel.querySelector(".timetable-now");
