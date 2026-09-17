@@ -27,9 +27,7 @@
         --line-strong: rgba(241, 239, 230, 0.16);
 
         --live: #4ade80;
-        --live-bg: rgba(74, 222, 128, 0.12);
         --next: #f2a93c;
-        --next-bg: rgba(242, 169, 60, 0.12);
 
         --c-itd112: #45b8ac;
         --c-ite104: #e67c8a;
@@ -582,11 +580,14 @@
         border-radius: 4px;
         background: color-mix(in srgb, var(--accent) 16%, var(--board-row));
         color: var(--ink);
-        cursor: pointer;
+        cursor: default;
         transition:
           height 160ms ease,
           box-shadow 160ms ease,
           background-color 160ms ease;
+      }
+      .timetable-event.is-expandable {
+        cursor: pointer;
       }
       .timetable-event:hover,
       .timetable-event:focus-visible {
@@ -601,14 +602,10 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
       }
       .timetable-event.is-live {
-        background: var(--live-bg);
-        border-left-color: var(--live);
-        box-shadow: inset 0 0 0 1px var(--live);
+        --accent: var(--live) !important;
       }
       .timetable-event.is-next {
-        background: var(--next-bg);
-        border-left-color: var(--next);
-        box-shadow: inset 0 0 0 1px var(--next);
+        --accent: var(--next) !important;
       }
       .timetable-event .code {
         color: var(--accent);
@@ -840,6 +837,17 @@
             ? savedViewMode
             : "list";
         let installPrompt = null;
+
+        document.addEventListener("click", (event) => {
+          if (event.target.closest(".timetable-event.is-expanded")) return;
+          const expandedEvent = document.querySelector(
+            ".timetable-event.is-expanded",
+          );
+          if (!expandedEvent) return;
+          expandedEvent.classList.remove("is-expanded");
+          expandedEvent.setAttribute("aria-expanded", "false");
+          expandedTimetableEventId = null;
+        });
 
         window.addEventListener("beforeinstallprompt", (event) => {
           event.preventDefault();
@@ -1099,43 +1107,53 @@
                 "timetable-event" +
                 (isLive ? " is-live" : "") +
                 (isNext ? " is-next" : "");
-              if (expandedTimetableEventId === e.id) {
-                event.classList.add("is-expanded");
-              }
-              event.tabIndex = 0;
-              event.setAttribute("role", "button");
               event.setAttribute("aria-label", `${e.code}: ${e.name}`);
-              event.setAttribute(
-                "aria-expanded",
-                String(expandedTimetableEventId === e.id),
-              );
               event.style.setProperty("--accent", `var(--c-${e.cls})`);
               event.style.top = `${((e.start - RANGE_START) / 30) * 54 + 4}px`;
               event.style.height = `${((e.end - e.start) / 30) * 54 - 7}px`;
               event.innerHTML = `<span class="code">${e.code}</span><span class="name">${e.name}</span><span class="detail">${e.room}</span><span class="detail">${fmtClock(e.start)}–${fmtClock(e.end)}</span>`;
-              const toggleExpanded = () => {
-                const isExpanded = event.classList.toggle("is-expanded");
-                expandedTimetableEventId = isExpanded ? e.id : null;
-                event.setAttribute("aria-expanded", String(isExpanded));
-                if (isExpanded) {
-                  column
-                    .querySelectorAll(".timetable-event.is-expanded")
-                    .forEach((other) => {
-                      if (other !== event) {
-                        other.classList.remove("is-expanded");
-                        other.setAttribute("aria-expanded", "false");
-                      }
-                    });
-                }
-              };
-              event.addEventListener("click", toggleExpanded);
-              event.addEventListener("keydown", (eventKey) => {
-                if (eventKey.key === "Enter" || eventKey.key === " ") {
-                  eventKey.preventDefault();
-                  toggleExpanded();
-                }
-              });
               column.appendChild(event);
+
+              const setupExpansion = () => {
+                if (event.scrollHeight <= event.clientHeight) {
+                  return;
+                }
+                event.classList.add("is-expandable");
+                event.tabIndex = 0;
+                event.setAttribute("role", "button");
+                event.setAttribute(
+                  "aria-expanded",
+                  String(expandedTimetableEventId === e.id),
+                );
+                if (expandedTimetableEventId === e.id) {
+                  event.classList.add("is-expanded");
+                }
+                const toggleExpanded = () => {
+                  const isExpanded = event.classList.toggle("is-expanded");
+                  expandedTimetableEventId = isExpanded ? e.id : null;
+                  event.setAttribute("aria-expanded", String(isExpanded));
+                  if (isExpanded) {
+                    column
+                      .querySelectorAll(".timetable-event.is-expanded")
+                      .forEach((other) => {
+                        if (other !== event) {
+                          other.classList.remove("is-expanded");
+                          other.setAttribute("aria-expanded", "false");
+                        }
+                      });
+                  }
+                };
+                event.addEventListener("click", toggleExpanded);
+                event.addEventListener("keydown", (eventKey) => {
+                  if (eventKey.key === "Enter" || eventKey.key === " ") {
+                    eventKey.preventDefault();
+                    toggleExpanded();
+                  }
+                });
+              };
+              document.fonts.ready.then(() => {
+                requestAnimationFrame(setupExpansion);
+              });
             });
             if (
               d.index === status.day &&
