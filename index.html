@@ -814,7 +814,11 @@
         }
 
         let selectedDay = null;
-        let viewMode = "list";
+        const savedViewMode = localStorage.getItem("class-schedule-view");
+        let viewMode =
+          savedViewMode === "timetable" || savedViewMode === "list"
+            ? savedViewMode
+            : "list";
         let installPrompt = null;
 
         window.addEventListener("beforeinstallprompt", (event) => {
@@ -862,10 +866,12 @@
         );
         listViewButton.addEventListener("click", () => {
           viewMode = "list";
+          localStorage.setItem("class-schedule-view", viewMode);
           render();
         });
         timetableViewButton.addEventListener("click", () => {
           viewMode = "timetable";
+          localStorage.setItem("class-schedule-view", viewMode);
           render();
         });
 
