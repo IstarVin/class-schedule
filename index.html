@@ -260,7 +260,6 @@
         display: flex;
         gap: 6px;
         overflow-x: auto;
-        margin-bottom: 12px;
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
@@ -296,6 +295,42 @@
       }
       .tabs button.is-today.is-selected {
         box-shadow: inset 0 0 0 1px var(--live);
+      }
+
+      .view-controls {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap-reverse;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .view-controls .tabs {
+        min-width: 0;
+      }
+      .view-switch {
+        display: inline-flex;
+        flex: 0 0 auto;
+        margin-left: auto;
+        padding: 3px;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: var(--board-raised);
+      }
+      .view-switch button {
+        border: 0;
+        border-radius: 5px;
+        padding: 6px 10px;
+        background: transparent;
+        color: var(--ink-soft);
+        font:
+          500 11px "IBM Plex Sans",
+          sans-serif;
+        cursor: pointer;
+      }
+      .view-switch button.is-selected {
+        background: var(--ink);
+        color: var(--board);
       }
 
       /* ---- Board (list of rows) ---- */
@@ -368,6 +403,7 @@
         font-weight: 500;
         margin-top: 3px;
         line-height: 1.3;
+        overflow-wrap: anywhere;
       }
       .row-room {
         font-size: 12px;
@@ -430,6 +466,188 @@
         text-align: center;
         color: var(--ink-soft);
         font-size: 13.5px;
+      }
+
+      /* ---- Timetable ---- */
+      .timetable-scroll {
+        max-width: 100%;
+        overflow: auto;
+        max-height: min(548px, 70vh);
+        overscroll-behavior: contain;
+        scrollbar-color: var(--ink-soft) var(--board);
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+      }
+      .timetable-scroll.is-list {
+        overflow: visible;
+        max-height: none;
+      }
+      .timetable-scroll.is-list .board-panel {
+        width: 100%;
+      }
+      .timetable-scroll::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      .timetable-scroll::-webkit-scrollbar-track {
+        background: var(--board);
+      }
+      .timetable-scroll::-webkit-scrollbar-thumb {
+        background: var(--ink-faint);
+        border: 2px solid var(--board);
+        border-radius: 5px;
+      }
+      .timetable-scroll::-webkit-scrollbar-thumb:hover {
+        background: var(--ink-soft);
+      }
+      .timetable-scroll .board-panel {
+        width: max-content;
+        min-width: 100%;
+      }
+      .timetable-panel {
+        width: 100%;
+        min-width: 680px;
+      }
+      .timetable-head,
+      .timetable-body {
+        display: grid;
+        grid-template-columns: 58px repeat(5, minmax(118px, 1fr));
+      }
+      .timetable-head {
+        border-bottom: 1px solid var(--line-strong);
+      }
+      .timetable-head > div {
+        padding: 12px 8px 10px;
+        text-align: center;
+        border-left: 1px solid var(--line);
+      }
+      .timetable-head > div:first-child {
+        border-left: 0;
+      }
+      .timetable-day {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .timetable-count {
+        display: block;
+        color: var(--ink-faint);
+        font:
+          10px "IBM Plex Mono",
+          monospace;
+        margin-top: 3px;
+      }
+      .timetable-body {
+        height: 972px;
+      }
+      .timetable-axis,
+      .timetable-column {
+        position: relative;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 26px,
+          var(--line) 26px,
+          var(--line) 27px,
+          transparent 27px,
+          transparent 54px,
+          var(--line-strong) 54px,
+          var(--line-strong) 55px
+        );
+      }
+      .timetable-axis {
+        background: none;
+        border-right: 1px solid var(--line);
+      }
+      .timetable-column {
+        border-left: 1px solid var(--line);
+      }
+      .timetable-time {
+        position: absolute;
+        right: 8px;
+        transform: translateY(-50%);
+        color: var(--ink-soft);
+        font:
+          10px "IBM Plex Mono",
+          monospace;
+        white-space: nowrap;
+      }
+      .timetable-event {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        min-height: 28px;
+        padding: 7px 8px;
+        overflow: hidden;
+        border-left: 3px solid var(--accent);
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--accent) 16%, var(--board-row));
+        color: var(--ink);
+      }
+      .timetable-event.is-live {
+        background: var(--live-bg);
+        border-left-color: var(--live);
+        box-shadow: inset 0 0 0 1px var(--live);
+      }
+      .timetable-event.is-next {
+        background: var(--next-bg);
+        border-left-color: var(--next);
+        box-shadow: inset 0 0 0 1px var(--next);
+      }
+      .timetable-event .code {
+        color: var(--accent);
+        font:
+          600 10px "IBM Plex Mono",
+          monospace;
+      }
+      .timetable-event .name {
+        display: block;
+        margin-top: 3px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .timetable-event .detail {
+        display: block;
+        margin-top: 4px;
+        color: var(--ink-soft);
+        font:
+          10px "IBM Plex Mono",
+          monospace;
+        white-space: nowrap;
+      }
+      .timetable-empty {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: var(--ink-faint);
+        font:
+          italic 11px "IBM Plex Mono",
+          monospace;
+        writing-mode: vertical-rl;
+      }
+      .timetable-now {
+        position: absolute;
+        left: 0;
+        right: 0;
+        z-index: 2;
+        border-top: 2px solid var(--live);
+        pointer-events: none;
+      }
+      .timetable-now span {
+        position: absolute;
+        right: 4px;
+        top: -17px;
+        padding: 1px 4px;
+        background: var(--live);
+        color: #0b2015;
+        font:
+          9px "IBM Plex Mono",
+          monospace;
+      }
+
+      .view-controls.is-timetable .tabs {
+        display: none;
       }
 
       /* ---- Legend ---- */
@@ -505,9 +723,21 @@
         </div>
       </div>
 
-      <div class="tabs" id="tabs"></div>
+      <div class="view-controls">
+        <div class="tabs" id="tabs"></div>
+        <div class="view-switch" role="group" aria-label="Schedule view">
+          <button id="listViewButton" type="button" aria-pressed="true">
+            List
+          </button>
+          <button id="timetableViewButton" type="button" aria-pressed="false">
+            Timetable
+          </button>
+        </div>
+      </div>
 
-      <div class="board-panel" id="panel"></div>
+      <div class="timetable-scroll">
+        <div class="board-panel" id="panel"></div>
+      </div>
 
       <div class="legend" id="legend"></div>
 
@@ -584,6 +814,7 @@
         }
 
         let selectedDay = null;
+        let viewMode = "list";
         let installPrompt = null;
 
         window.addEventListener("beforeinstallprompt", (event) => {
@@ -623,6 +854,19 @@
             render();
           });
           tabsEl.appendChild(btn);
+        });
+
+        const listViewButton = document.getElementById("listViewButton");
+        const timetableViewButton = document.getElementById(
+          "timetableViewButton",
+        );
+        listViewButton.addEventListener("click", () => {
+          viewMode = "list";
+          render();
+        });
+        timetableViewButton.addEventListener("click", () => {
+          viewMode = "timetable";
+          render();
         });
 
         // ---------- Legend ----------
@@ -720,6 +964,10 @@
         }
 
         function renderPanel(status) {
+          if (viewMode === "timetable") {
+            renderTimetable(status);
+            return;
+          }
           const panel = document.getElementById("panel");
           panel.innerHTML = "";
           const dayEvents = DATA.filter((e) => e.day === selectedDay).sort(
@@ -787,6 +1035,64 @@
           }
         }
 
+        function renderTimetable(status) {
+          const panel = document.getElementById("panel");
+          panel.innerHTML = `<div class="timetable-panel"><div class="timetable-head"><div></div>${DAYS.map(
+            (d) => {
+              const count = DATA.filter((e) => e.day === d.index).length;
+              return `<div><span class="timetable-day">${d.label}</span><span class="timetable-count">${count ? `${count} sessions` : "no classes"}</span></div>`;
+            },
+          ).join(
+            "",
+          )}</div><div class="timetable-body"><div class="timetable-axis"></div>${DAYS.map((d) => `<div class="timetable-column" data-day="${d.index}"></div>`).join("")}</div></div>`;
+
+          const axis = panel.querySelector(".timetable-axis");
+          for (let mins = RANGE_START; mins <= RANGE_END; mins += 60) {
+            const time = document.createElement("span");
+            time.className = "timetable-time";
+            time.style.top = `${((mins - RANGE_START) / 30) * 54}px`;
+            time.textContent = fmtClock(mins);
+            axis.appendChild(time);
+          }
+
+          DAYS.forEach((d) => {
+            const column = panel.querySelector(`[data-day="${d.index}"]`);
+            const events = DATA.filter((e) => e.day === d.index);
+            if (!events.length) {
+              column.innerHTML =
+                '<span class="timetable-empty">No scheduled classes</span>';
+            }
+            events.forEach((e) => {
+              const isLive =
+                status.day === e.day &&
+                status.mins >= e.start &&
+                status.mins < e.end;
+              const isNext = status.next && status.next.id === e.id;
+              const event = document.createElement("div");
+              event.className =
+                "timetable-event" +
+                (isLive ? " is-live" : "") +
+                (isNext ? " is-next" : "");
+              event.style.setProperty("--accent", `var(--c-${e.cls})`);
+              event.style.top = `${((e.start - RANGE_START) / 30) * 54 + 4}px`;
+              event.style.height = `${((e.end - e.start) / 30) * 54 - 7}px`;
+              event.innerHTML = `<span class="code">${e.code}</span><span class="name">${e.name}</span><span class="detail">${e.room} · ${fmtClock(e.start)}–${fmtClock(e.end)}</span>`;
+              column.appendChild(event);
+            });
+            if (
+              d.index === status.day &&
+              status.mins >= RANGE_START &&
+              status.mins <= RANGE_END
+            ) {
+              const now = document.createElement("div");
+              now.className = "timetable-now";
+              now.style.top = `${((status.mins - RANGE_START) / 30) * 54}px`;
+              now.innerHTML = `<span>${fmtClock(status.mins)} · now</span>`;
+              column.appendChild(now);
+            }
+          });
+        }
+
         function nowDivider(mins) {
           const d = document.createElement("div");
           d.className = "now-divider";
@@ -795,6 +1101,22 @@
         }
 
         function renderTabs(status) {
+          document
+            .querySelector(".view-controls")
+            .classList.toggle("is-timetable", viewMode === "timetable");
+          document
+            .querySelector(".timetable-scroll")
+            .classList.toggle("is-list", viewMode === "list");
+          listViewButton.classList.toggle("is-selected", viewMode === "list");
+          timetableViewButton.classList.toggle(
+            "is-selected",
+            viewMode === "timetable",
+          );
+          listViewButton.setAttribute("aria-pressed", viewMode === "list");
+          timetableViewButton.setAttribute(
+            "aria-pressed",
+            viewMode === "timetable",
+          );
           DAYS.forEach((d) => {
             const btn = document.getElementById("tab-" + d.index);
             btn.classList.toggle("is-selected", d.index === selectedDay);
